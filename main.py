@@ -30,10 +30,10 @@ def main():
     if verbose:
         print(f"User prompt: {user_prompt}\n")
 
-    messages = [
-        types.Content(role="user", parts=[types.Part(text=user_prompt)]),
-    ]
+    # Will be used to store conversation messages between the user and the model
+    messages = [types.Content(role="user", parts=[types.Part(text=user_prompt)])]
 
+    # Main loop
     iters = 0
     while True:
         iters += 1
