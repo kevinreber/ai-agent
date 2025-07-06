@@ -1,7 +1,10 @@
 import subprocess
 import os
+from google.genai import types
+
 
 TIMEOUT = 30
+
 
 def _verify_file_path(working_directory: str, file_path: str) -> str:
     abs_working_dir = os.path.abspath(working_directory)
@@ -25,7 +28,6 @@ def run_python_file(working_directory, file_path, args=None):
         commands = ["python", file_path]
         if args:
             commands.extend(args)
-        # Run the Python file with proper configuration
         result = subprocess.run(
             commands,
             capture_output=True, # Capture both stdout and stderr
@@ -33,30 +35,39 @@ def run_python_file(working_directory, file_path, args=None):
             timeout=TIMEOUT,
             cwd=working_directory,
         )
-        # Build the output string
-        output_parts = []
-        
-        # Add stdout if present
+        output = []
         if result.stdout:
-            output_parts.append(f"STDOUT:\n{result.stdout}")
-        
-        # Add stderr if present
+            output.append(f"STDOUT:\n{result.stdout}")
         if result.stderr:
-            output_parts.append(f"STDERR:\n{result.stderr}")
-        
-        # Add exit code information if non-zero
+            output.append(f"STDERR:\n{result.stderr}")
+
         if result.returncode != 0:
-            output_parts.append(f"Process exited with code {result.returncode}")
-        
-        # Return formatted output or "No output produced" message
-        if output_parts:
-            return "\n".join(output_parts)
-        else:
-            return "No output produced."
-            
-    except subprocess.TimeoutExpired:
-        return f'Error: executing Python file: Timeout after {TIMEOUT} seconds'
-    except subprocess.CalledProcessError as e:
-        return f'Error: executing Python file: {e}'
+            output.append(f"Process exited with code {result.returncode}")
+
+        return "\n".join(output) if output else "No output produced."
     except Exception as e:
-        return f'Error: executing Python file: {e}'
+        return f"Error: executing Python file: {e}"
+
+
+SCHEMA_RUN_PYTHON_FILE = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Executes a Python file within the working directory and returns the output from the interpreter.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="Path to the Python file to execute, relative to the working directory.",
+            ),
+            "args": types.Schema(
+                type=types.Type.ARRAY,
+                items=types.Schema(
+                    type=types.Type.STRING,
+                    description="Optional arguments to pass to the Python file.",
+                ),
+                description="Optional arguments to pass to the Python file.",
+            ),
+        },
+        required=["file_path"],
+    ),
+)
