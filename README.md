@@ -1,13 +1,15 @@
 # AI Code Assistant
 
-An AI-powered coding assistant that can help you with file operations, code execution, and development tasks using Google's Gemini AI model.
+An AI-powered coding assistant that can help you with file operations, code execution, and development tasks using Google's Gemini AI model. Features an interactive conversation mode that maintains context across multiple prompts.
 
 ## Features
 
+- **Interactive Conversations**: Chat with the AI agent with full context awareness
 - **File Operations**: List files, read file contents, write files
 - **Code Execution**: Run Python files with proper output capture
 - **Security**: All operations are constrained to a working directory for safety
-- **Interactive**: Multi-turn conversations with function calling capabilities
+- **Context Memory**: The agent remembers your conversation history and can reference previous actions
+- **Conversation Limits**: Configurable prompt limit (default: 20) to manage resource usage
 
 ## Requirements
 
@@ -87,13 +89,42 @@ An AI-powered coding assistant that can help you with file operations, code exec
 
 2. **Configure environment variables**:
    Create a `.env` file in the project root:
+
    ```env
    GEMINI_API_KEY=your_api_key_here
    ```
 
+3. **Optional: Adjust conversation limits**:
+   Edit `config.py` to change:
+   ```python
+   MAX_ITERS = 20  # Maximum prompts per conversation
+   MAX_CHARS = 10000  # Maximum characters to read from files
+   WORKING_DIR = "./calculator"  # Working directory
+   ```
+
 ## Usage
 
-### Basic Usage
+### Interactive Mode (Recommended)
+
+Start an interactive conversation:
+
+```bash
+# Using uv
+uv run main.py
+
+# Using python
+python main.py
+```
+
+This starts an interactive chat where you can:
+
+- Ask questions and get responses
+- Make follow-up requests that build on previous context
+- Use special commands to manage the conversation
+
+### Single Command Mode
+
+Run a single command and exit:
 
 ```bash
 # Using uv
@@ -103,41 +134,94 @@ uv run main.py "your prompt here"
 python main.py "your prompt here"
 ```
 
+### Interactive Commands
+
+When in interactive mode, you can use these special commands:
+
+- `quit`, `exit`, or `bye` - End the conversation
+- `clear` - Start a new conversation (clears context)
+- `help` - Show help information
+
 ### Examples
 
-#### List files in the working directory
+#### Interactive Conversation
 
 ```bash
+$ uv run main.py
+
+🤖 AI Code Assistant
+Type 'quit', 'exit', or 'bye' to end the conversation
+Type 'clear' to start a new conversation
+Type 'help' for usage information
+--------------------------------------------------
+
+You: What files are in the calculator directory?
+Assistant: Let me check what files are in the calculator directory...
+
+You: Can you read the contents of main.py?
+Assistant: I'll read the contents of main.py for you...
+
+You: What was the output when we ran the tests?
+Assistant: Based on our previous conversation, when we ran the tests, the output was...
+```
+
+#### Single Commands
+
+```bash
+# List files
 uv run main.py "what files are in the calculator directory?"
-```
 
-#### Read file contents
-
-```bash
+# Read file contents
 uv run main.py "get the contents of main.py"
-```
 
-#### Run a Python file
-
-```bash
+# Run a Python file
 uv run main.py "run tests.py"
-```
 
-#### Write a new file
-
-```bash
+# Write a new file
 uv run main.py "create a new README.md file with the contents '# My Project'"
-```
 
-#### Verbose mode (for debugging)
-
-```bash
+# Verbose mode (for debugging)
 uv run main.py "run tests.py" --verbose
 ```
 
 ### Working Directory
 
 The application operates within a `calculator` directory by default. All file operations are constrained to this directory for security.
+
+## Conversation Features
+
+### Context Awareness
+
+- The agent remembers all previous interactions in a conversation
+- You can ask follow-up questions like "What was the output of the last command?"
+- The agent can reference files you've read, commands you've run, or files you've created
+- You can build on previous work - create a file, then read or modify it
+
+### Conversation Management
+
+- **Automatic limit**: Conversations are limited to 20 prompts by default
+- **Manual clearing**: Use `clear` command to start fresh
+- **Graceful exit**: Use `quit`, `exit`, or `bye` to end conversations
+- **Auto-restart**: When the limit is reached, a new conversation starts automatically
+
+### Example Conversation Flow
+
+```
+You: What files are in the directory?
+Assistant: [Lists files]
+
+You: Read the main.py file
+Assistant: [Shows file contents]
+
+You: What was in that file again?
+Assistant: [References previous file read]
+
+You: Run the tests
+Assistant: [Executes tests]
+
+You: What was the test output?
+Assistant: [References previous test execution]
+```
 
 ## Testing
 
@@ -223,6 +307,7 @@ Writes content to files within the working directory.
 - **Directory traversal protection**: Prevents access to files outside the permitted area
 - **File type validation**: Ensures only appropriate files are accessed
 - **Timeout protection**: Prevents infinite execution loops
+- **Conversation limits**: Prevents resource exhaustion from long conversations
 
 ## Troubleshooting
 
@@ -244,8 +329,13 @@ Writes content to files within the working directory.
    - Check that files aren't locked by other processes
 
 4. **"Timeout error"**
+
    - Python file execution is limited to 30 seconds
    - Check for infinite loops in your Python code
+
+5. **"Maximum conversation length reached"**
+   - The conversation limit (20 prompts) has been reached
+   - A new conversation will start automatically, or use `clear` to start fresh
 
 ### Debug Mode
 
